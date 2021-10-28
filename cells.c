@@ -110,7 +110,7 @@ double interp3d(int I, double h, double Xp, double Yp, double Zp, double *c)
 }
 
 /* The main routine */
-double cells(mwSize Nmax,double *X,double *Y,double *Z,double *state,double *cellN,double *D,double *M,double *cycr,double *c_p,double *c,double *C,double *rates,double *hyp,double mu,double sigma,double h,double pdeT,double eta1,double eta2,double eta3,int rng_s,mwSize I,double *Xout,double *Yout,double *Zout,double *stateout,double *Dout,double *Mout,double *cycrout,double *Oxcout,double *Ncs,double *Cout)
+void cells(mwSize Nmax,double *X,double *Y,double *Z,double *state,double *cellN,double *D,double *M,double *cycr,double *c_p,double *c,double *C,double *rates,double *hyp,double mu,double sigma,double h,double pdeT,double eta1,double eta2,double eta3,int rng_s,mwSize I,double *Xout,double *Yout,double *Zout,double *stateout,double *Dout,double *Mout,double *cycrout,double *Oxcout,double *Ncs,double *Cout)
 {
    
   // Extract values from input arrays
