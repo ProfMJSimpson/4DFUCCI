@@ -1,4 +1,68 @@
 function [Nvec,dvec,rvec,yvec,gvec,arrvec,radii,radarr,radnec,X,Y,Z,state,c,c_p,Xsnap,Ysnap,Zsnap,arrsnap,statesnap,csnap,Nsnap] = ibm3d(N0,Nmax,T,L,sigma,parms,rates,tg,xmesh,ymesh,zmesh,sim_id)
+%--------- IBM3D ---------%
+% ibm3d.m initialises and performs the calculations for the IBM. Nutrient
+% concentration updates are performed at the top level, and agent-level
+% behaviours are performed in cells.c (see cells.m).
+%
+% Inputs:
+%     N0: Initial population
+%     Nmax: Maximum allowed population
+%     T: Termination time for simulation
+%     L: Domain length
+%     sigma: Proliferation distance
+%     parms: [alpha h c_b r mu c_a c_m c_d I pdeT eta1 eta2 eta3]
+%           WHERE
+%               alpha: Consumption-diffusion ratio
+%               h: Node spacing
+%               c_b: Nutrient concentration on the boundary
+%               r: Initial radius of spheroid
+%               mu: Migration distance
+%               c_a: G1 arrest threshold
+%               c_m: Migration threshold
+%               c_d: Death threshold
+%               I: Number of x, y, or z nodes
+%               pdeT: Time between steady-state solutions
+%               eta1: Arrest Hill index
+%               eta2: Migration Hill index
+%               eta3: Death Hill index
+%     rates: [dmax dmin Rr Ry Rg mmax mmin]
+%           WHERE
+%               dmax: Maximum death rate
+%               dmin: Minimum death rate
+%               Rr: Maximum G1-eS rate
+%               Ry: Constant eS-S/G2/M rate
+%               Rg: Constant S/G2/M-mitosis rate
+%               mmax: Maximum migration rate
+%               mmin: Minimum migration rate
+%     tg: Times to save population and radius data
+%     xmesh: x in [0,L] interval divided up I times with spacing h
+%     ymesh: y in [0,L] interval divided up I times with spacing h
+%     zmesh: z in [0,L] interval divided up I times with spacing h
+%     sim_id: Name of simulation and random number generator seed
+%
+% Outputs: 
+%     Nvec: Time series living population data
+%     dvec: Time series deaad population data
+%     rvec: Time series red (all) population data
+%     yvec: Time series yellow population data
+%     gvec: Time series green population data
+%     arrvec: Time series arrested red population data
+%     radii: Time series outer radius data
+%     radarr: Time series arrested radius data
+%     radnec: Time series necrotic radius data
+%     X: Final x positions of agents
+%     Y: Final y positions of agents
+%     Z: Final z positions of agents
+%     state: Final states of agents
+%     c: Final nutrient concentration profile
+%     c_p: Final local nutrient concentration for all agents
+%     Xsnap: Agent x positions every 24 hours
+%     Ysnap: Agent y positions every 24 hours
+%     Zsnap: Agent z positions every 24 hours
+%     arrsnap: Arrested red agent [x y z] positions every 24 hours
+%     statesnap: Agent cycling/dead status every 24 hours
+%     csnap: Nutrient concentration profile every 24 hours
+%     Nsnap: Total population every 24 hours
 
 % Initialise seed
 rng(sim_id)
@@ -577,7 +641,7 @@ for q = 1:N+Nd
     end
 end
 
-rbw = 20; % Binwidth for density calculations (best so far is 20 or 22)
+rbw = 20; % (R)adial (b)in (w)idth for density calculations 
 
 bins = 0:rbw:10*ceil(radius/10); % Round to the next 10 for the radius
 data = histcounts(grerads,bins);
@@ -586,7 +650,7 @@ for i = 1:length(bins)-1
     centres(i) = (bins(i+1)+bins(i))/2;
 end
 
-dens1 = data./(4.*pi.*centres'.^2*(rbw));
+dens1 = data./(4.*pi.*centres'.^2*(rbw)); % This approximates the radial shell volume extremely well
 scaled_dens = dens1' ./ max(dens1);
 
 % Remove the outer tail of the cell concentration distribution, as this

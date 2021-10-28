@@ -2,6 +2,8 @@
 % Run this file to do a shorter, single simulation run, for the purposes of
 % demonstrating the functionality of the code, and example outputs.
 
+% Runtime for quick_demo.m is approximately 378 seconds (6.3 minutes)
+
 %-% SET THE PARAMETERS FOR THE MODEL
 
 % Simulation choice: 1 for short, 6 day simulation. 2 for longer, 10 day
@@ -21,7 +23,7 @@ Nmax = 300000; % Maximum number of cells for simulation
 endtimes = [ 144 240 ]; % Final times of simulation (hours)
 T = endtimes(choice); % Simulation end point (h)
 L = 4000; % Length of domain
-I = 101; % Number of x, y, or z nodes
+I = 51; % Number of x, y, or z nodes
 xmesh = linspace(0,L,I); % Generate x mesh
 ymesh = linspace(0,L,I); % Generate y mesh
 zmesh = linspace(0,L,I); % Generate z mesh
@@ -232,14 +234,12 @@ for q = 1:Ndays+1
     dayqreds = [];
     dayqyels = [];
     dayqgres = [];
-    dayqdeads = [];
     
     % Initialise with 100 rows for enough space for all bins
     radial_day_red = zeros(100,runcount);
     radial_day_yel = zeros(100,runcount);
     radial_day_arr = zeros(100,runcount);
     radial_day_gre = zeros(100,runcount);
-    radial_day_dead = zeros(100,runcount);
     radial_day_cyc = zeros(100,runcount);
     
        
@@ -254,7 +254,6 @@ for q = 1:Ndays+1
         dayq_runi_reds = [];
         dayq_runi_yels = [];
         dayq_runi_gres = [];
-        dayq_runi_deads = [];
         
         for j = 1:dayqN(i)
             if dayqstate(j,i) == 1
@@ -263,27 +262,23 @@ for q = 1:Ndays+1
                 dayq_runi_yels = [ dayq_runi_yels ; dayqX(j,i) dayqY(j,i) dayqZ(j,i) ];
             elseif dayqstate(j,i) == 3
                 dayq_runi_gres = [ dayq_runi_gres ; dayqX(j,i) dayqY(j,i) dayqZ(j,i) ];
-            elseif dayqstate(j,i) == 0
-                dayq_runi_deads = [ dayq_runi_deads ; dayqX(j,i) dayqY(j,i) dayqZ(j,i) ];
             end
         end
         
         % Calculate the distribution 
-        dayqruniNarr = find(arrsnapall(:,((i-1)*3*(Ndays+1))+q),1,'last');
-        dayqruniradarr = radarrall(TgDN*(q-1)+1,i);
-        [redc,yelc,grec,arrc,deadc,cycc] = radcalcs(dayq_runi_reds,dayq_runi_yels,dayq_runi_gres,arrsnapall(1:dayqruniNarr,((i-1)*3*(Ndays+1))+[q q+Ndays+1 q+2*(Ndays+1)]),dayq_runi_deads,pbin,dayqruniradarr);
+        dayqruniNarr = find(arrsnapall(:,((i-1)*3*(Ndays+1))+q),1,'last'); % Number of arrested agents at t
+        dayqruniradarr = radarrall(TgDN*(q-1)+1,i); % Arrested radius at t
+        [redc,yelc,grec,arrc,cycc] = radcalcs(dayq_runi_reds,dayq_runi_yels,dayq_runi_gres,arrsnapall(1:dayqruniNarr,((i-1)*3*(Ndays+1))+[q q+Ndays+1 q+2*(Ndays+1)]),pbin,dayqruniradarr);
         dayqrunired_distr = redc;
         dayqruniyel_distr = yelc;
         dayqrunigre_distr = grec;
         dayqruniarr_distr = arrc;
-        dayqrunidead_distr = deadc;
         dayqrunicyc_distr = cycc;
         
         radial_day_red(1:length(dayqrunired_distr),i) = dayqrunired_distr;
         radial_day_yel(1:length(dayqruniyel_distr),i) = dayqruniyel_distr;
         radial_day_gre(1:length(dayqrunigre_distr),i) = dayqrunigre_distr;
         radial_day_arr(1:length(dayqruniarr_distr),i) = dayqruniarr_distr;
-        radial_day_dead(1:length(dayqrunidead_distr),i) = dayqrunidead_distr;
         radial_day_cyc(1:length(dayqrunicyc_distr),i) = dayqrunicyc_distr;
     end
     
@@ -321,7 +316,130 @@ end
 
 Diam = 10; % Diameter slightly smaller than cell size, as in experimental images, we only see nucleus
 
+%-% Equator, upper, and lower tropics without dead agents (Fig 3)
+figure
+set(gcf,'Position',[20 20 1800 900])
+for k = 1:Ndays+1
+    Narr = find(arrsnap(:,k)+L/2,1,'last'); % Number of arrested cells
+    
+    % Reds, yellows, and greens at Day k-1
+    redk = snapreds(1:szreds(k),3*(k-1)+1:3*(k-1)+3);
+    yelk = snapyels(1:szyels(k),3*(k-1)+1:3*(k-1)+3);
+    grek = snapgres(1:szgres(k),3*(k-1)+1:3*(k-1)+3);
+        
+    % Total and necrotic radius at k-1 days
+    radP = radii(TgDN*(k-1)+1);
+    radN = radnec(TgDN*(k-1)+1);
+        
+    % Indices of agents at equator
+    rinds = find(abs(redk(:,3) - 0) < 6);
+    yinds = find(abs(yelk(:,3) - 0) < 6);
+    ginds = find(abs(grek(:,3) - 0) < 6);
+    
+    % Plot 2D equator slice
+    subplot(3,Ndays+1,k)
+    axis equal
+    axis([-0.1*L 0.1*L -0.1*L 0.1*L -0.1*L 0.1*L])
+    % Set marker size to agent size (12 micron diameter)
+    ax = gca;
+    AR = get(gca, 'dataaspectratio');
+    oldunits = get(ax,'Units');
+    set(ax,'Units','points');
+    pos = get(ax,'Position');
+    set(ax,'Units',oldunits');
+    XL = xlim(ax);
+    points_per_unit = Diam*pos(3)/(XL(2) - XL(1));
+    marker_size = points_per_unit.^2*pi/4;
+    hold on
+    if ~isempty(redk)
+        scatter3(redk(rinds,1),redk(rinds,2),redk(rinds,3),marker_size,'MarkerFaceColor',[1 0 0],'MarkerEdgeColor',[0.8 0 0])
+    end
+    if ~isempty(yelk)
+        scatter3(yelk(yinds,1),yelk(yinds,2),yelk(yinds,3),marker_size,'MarkerFaceColor',[1 1 0],'MarkerEdgeColor',[0.8 0.8 0])
+    end
+    if ~isempty(grek)
+        scatter3(grek(ginds,1),grek(ginds,2),grek(ginds,3),marker_size,'MarkerFaceColor',[0 1 0],'MarkerEdgeColor',[0 0.8 0])
+    end
+    view(2)
+    grid on
+    title(['Day ', num2str(k-1),' Equator'])
+    set(gca,'TickLabelInterpreter', 'LaTeX','Fontsize' , 12,'Color',[0 0 0],'GridColor',[0.5 0.5 0.5])
+    % Remove/rename tick labels
+    ax.XTick = [-400 -200 0 200 400];
+    ax.XTickLabel = {"","","","",""};
+    ax.YTick = [-400 -200 0 200 400];
+    ax.YTickLabel = {"","","","",""};
+    
+    % Indices for relevant upper/lower tropics
+    if radN < 50 % If necrotic core is not significant in size 
+        rinds_ut = find(abs(redk(:,3) + radP/2) < 6);
+        yinds_ut = find(abs(yelk(:,3) + radP/2) < 6);
+        ginds_ut = find(abs(grek(:,3) + radP/2) < 6);
+        rinds_lt = find(abs(redk(:,3) - radP/2) < 6);
+        yinds_lt = find(abs(yelk(:,3) - radP/2) < 6);
+        ginds_lt = find(abs(grek(:,3) - radP/2) < 6);
+    else
+        rinds_ut = find(abs(redk(:,3) + radN) < 6);
+        yinds_ut = find(abs(yelk(:,3) + radN) < 6);
+        ginds_ut = find(abs(grek(:,3) + radN) < 6);
+        rinds_lt = find(abs(redk(:,3) - radN) < 6);
+        yinds_lt = find(abs(yelk(:,3) - radN) < 6);
+        ginds_lt = find(abs(grek(:,3) - radN) < 6);
+    end
+    
+    subplot(3,Ndays+1,Ndays+1+k)
+    axis equal
+    axis([-0.1*L 0.1*L -0.1*L 0.1*L -0.1*L 0.1*L])
+    hold on
+    if ~isempty(redk)
+        scatter3(redk(rinds_lt,1),redk(rinds_lt,2),redk(rinds_lt,3),marker_size,'MarkerFaceColor',[1 0 0],'MarkerEdgeColor',[0.8 0 0])
+    end
+    if ~isempty(yelk)
+        scatter3(yelk(yinds_lt,1),yelk(yinds_lt,2),yelk(yinds_lt,3),marker_size,'MarkerFaceColor',[1 1 0],'MarkerEdgeColor',[0.8 0.8 0])
+    end
+    if ~isempty(grek)
+        scatter3(grek(ginds_lt,1),grek(ginds_lt,2),grek(ginds_lt,3),marker_size,'MarkerFaceColor',[0 1 0],'MarkerEdgeColor',[0 0.8 0])
+    end
+    view(2)
+    grid on
+    title(['Day ', num2str(k-1),' Lower Tropic'])
+    set(gca,'TickLabelInterpreter', 'LaTeX','Fontsize' , 12,'Color',[0 0 0],'GridColor',[0.5 0.5 0.5])
+    % Remove/rename tick labels
+    ax = gca;
+    ax.XTick = [-400 -200 0 200 400];
+    ax.XTickLabel = {"","","","",""};
+    ax.YTick = [-400 -200 0 200 400];
+    ax.YTickLabel = {"","","","",""};
+    
+    subplot(3,Ndays+1,2*(Ndays+1)+k)
+    axis equal
+    axis([-0.1*L 0.1*L -0.1*L 0.1*L -0.1*L 0.1*L])
+    hold on
+    if ~isempty(redk)
+        scatter3(redk(rinds_ut,1),redk(rinds_ut,2),redk(rinds_ut,3),marker_size,'MarkerFaceColor',[1 0 0],'MarkerEdgeColor',[0.8 0 0])
+    end
+    if ~isempty(yelk)
+        scatter3(yelk(yinds_ut,1),yelk(yinds_ut,2),yelk(yinds_ut,3),marker_size,'MarkerFaceColor',[1 1 0],'MarkerEdgeColor',[0.8 0.8 0])
+    end
+    if ~isempty(grek)
+        scatter3(grek(ginds_ut,1),grek(ginds_ut,2),grek(ginds_ut,3),marker_size,'MarkerFaceColor',[0 1 0],'MarkerEdgeColor',[0 0.8 0])
+    end
+    view(2)
+    grid on
+    title(['Day ', num2str(k-1),' Upper Tropic'])
+    set(gca,'TickLabelInterpreter', 'LaTeX','Fontsize' , 12,'Color',[0 0 0],'GridColor',[0.5 0.5 0.5])
+    % Remove/rename tick labels
+    ax = gca;
+    ax.XTick = [-400 -200 0 200 400];
+    ax.XTickLabel = {"","","","",""};
+    ax.YTick = [-400 -200 0 200 400];
+    ax.YTickLabel = {"","","","",""};
+    
+end
+
 %-% 3D and 2D spheroid images with dead agents
+figure
+set(gcf,'Position',[20 20 1800 900])
 for k = 1:Ndays+1
     Narr = find(arrsnap(:,k)+L/2,1,'last'); % Number of arrested cells
     
@@ -367,7 +485,7 @@ for k = 1:Ndays+1
     deadsSP = deadk;
     deadsSP(dinds_oct,:) = [];
     
-    figure
+    subplot(3,Ndays+1,k)
     % Set an appropriate agent size for 3D
     view(3)
     axis equal
@@ -406,6 +524,7 @@ for k = 1:Ndays+1
     plot3(-10*ones(length(xy)),xy,zh,'k','Linewidth',2)
     plot3(xy,-10*ones(length(xy)),zh,'k','Linewidth',2)
     plot3(xy,fliplr(xy),10*ones(length(xy)),'k','Linewidth',2)
+    title(['Day ', num2str(k-1),' 3D Spheroid'])
     ax.GridAlpha = 0.25;
     % Remove/edit axis ticks
     ax.XTick = [-400 -200 0 200 400];
@@ -415,7 +534,7 @@ for k = 1:Ndays+1
     ax.ZTick = [-400 -200 0 200 400];
     ax.ZTickLabel = {"","","","",""};
     
-    figure
+    subplot(3,Ndays+1,Ndays+1+k)
     axis equal
     axis([-0.1*L 0.1*L -0.1*L 0.1*L -0.1*L 0.1*L])
     % Set agent size as appropriate for 2D figure
@@ -442,6 +561,7 @@ for k = 1:Ndays+1
         scatter3(deadk(dinds_eq,1),deadk(dinds_eq,2),deadk(dinds_eq,3),marker_size,'MarkerFaceColor',[0 1 1],'MarkerEdgeColor',[0 0.8 0.8])
     end
     view(2)
+    title(['Day ', num2str(k-1),' 2D Slice'])
     grid on
     set(gca,'TickLabelInterpreter', 'LaTeX','Fontsize' , 12,'Color',[0 0 0],'GridColor',[0.7 0.7 0.7])
     % Remove/edit axis ticks
@@ -468,22 +588,15 @@ for q = 1:Ndays+1
     cshow = interp1(xvs,c1D,fliplr(pbin),'spline');
     
     % Cleaner without error bars
-    figure
+    subplot(3,Ndays+1,2*(Ndays+1)+q)
     hold on
     % Shift pbin to account for difference between bin counts (one fewer
     % than bin edges)
     hd1 = plot(pbin(2:end),(rho_cyc(1:length(pbin)-1,q))./(rho_max),'r-','LineWidth',2);
-    shadecyc = fill(perip,inbetweencycred,'r');
-    set(shadecyc,'FaceAlpha',0.2,'EdgeAlpha',0.2)
     hd2 = plot(pbin(2:end),(rho_y(1:length(pbin)-1,q))./(rho_max),'-','LineWidth',2,'Color',[1 0.8 0]);
-    shadeyel = fill(perip,inbetweenyel,[1 0.8 0]);
-    set(shadeyel,'FaceAlpha',0.2,'EdgeAlpha',0.2)
     hd3 = plot(pbin(2:end),(rho_g(1:length(pbin)-1,q))./(rho_max),'g-','LineWidth',2);
-    shadegre = fill(perip,inbetweengre,'g');
-    set(shadegre,'FaceAlpha',0.2,'EdgeAlpha',0.2)
     hd4 = plot(pbin(4:end),(rho_a(3:length(pbin)-1,q))./(rho_max),'r--','LineWidth',2);
-    shadearr = fill(perip(3:end-2),inbetweenarrdens,'r-');
-    set(shadearr,'FaceAlpha',0.2,'EdgeAlpha',0.2)
+    title(['Day ', num2str(q-1),' Density Profile'])
     axis([0 1.1*max(rmax) 0 1]);
     plot(pbin,cshow,'k-','LineWidth',2)
     hold off
@@ -492,6 +605,8 @@ end
 
 %-% 2D and 1D nutrient profiles
 load('cMap.mat')
+figure
+set(gcf,'Position',[20 20 1800 600])
 for k = 1:Ndays+1
     
     % Find outer, arrest, and necrotic radii at Day k-1
@@ -516,7 +631,7 @@ for k = 1:Ndays+1
     c_eq = c_k(:,:,(I-1)/2+1);
     c_1D = c_k((I-1)/2+1,:,(I-1)/2+1);
     
-    figure
+    subplot(2,Ndays+1,k)
     set(gcf,'Renderer','Painters')
     surf(Xm(:,:,(I-1)/2+1),Ym(:,:,(I-1)/2+1),c_eq,'EdgeColor','none')
     view(2)
@@ -530,6 +645,7 @@ for k = 1:Ndays+1
     if r_n_k > 0
         plot3(xcircN,ycircN,0.08*L*ones(1,length(xcircN)),'LineWidth',2,'Color',[1 1 1])
     end
+    title(['Day ', num2str(k-1),' Nutrient 2D'])
     axis equal
     axis([-fig_domain*L fig_domain*L -fig_domain*L fig_domain*L])
     ax = gca;
@@ -537,37 +653,42 @@ for k = 1:Ndays+1
     ax.XTickLabel = {"0"};
     ax.YTick = [0];
     ax.YTickLabel = {"0"};
-    colorbar 
+    h = colorbar; 
     colormap(ax,cMap)
     caxis([0 1])
+    set(h, 'Position', [.915 .625 .01 .260])
     
     xvec1D = linspace(-L/2,L/2,201);
     % Perform spline interpolation if necessary to make profile smoother
     c_1Dfine = interp1(Xm((I-1)/2+1,:,(I-1)/2+1),c_1D,xvec1D,'spline');
     
-    figure
+    subplot(2,Ndays+1,Ndays+1+k)
     plot(xvec1D,c_1Dfine,'k','LineWidth',2)
     yline(c_a,'r--','LineWidth',2);
     yline(c_d,'c--','LineWidth',2);
     patch([-r_o_k r_o_k r_o_k -r_o_k],[-0.1 -0.1 1.1 1.1],[0.8 0.8 0.4],'EdgeColor','none','FaceAlpha',0.3)
+    title(['Day ', num2str(k-1),' Nutrient 1D'])
     axis([-fig_domain*L fig_domain*L 0 1])
     
 end
 
 %-% Population plots
+figure
+set(gcf,'Position',[20 20 1800 500])
 % FIGURE 7 LEFT PANEL
 % Plot average living and dead populations with shading of one standard deviation
-figure
+subplot(1,3,1)
 plot(tg,avgN,'k-','LineWidth',2)
 hold on 
 hd5 = plot(tg,avgd,'c--','LineWidth',2);
 axis([0 T 0 max(avgN)*1.1]) % Allow for buffer zone at top of figure (1.1*max)
 xlabel('Time (hrs)')
 ylabel('Population')
+title('Living and dead populations')
 
 % FIGURE 7 MIDDLE PANEL
 % Average red-type cell subpopulations (all, cycling, arrested)
-figure
+subplot(1,3,2)
 hd1 = plot(tg,avgred,'r:','LineWidth',2);
 hold on 
 hd2 = plot(tg,avgarr,'r--','LineWidth',2);
@@ -575,16 +696,18 @@ hd6 = plot(tg,avgcyc,'r-','LineWidth',2);
 xlabel('Time (hrs)')
 ylabel('Population')
 axis([0 T 0 max(avgN)*1.1]) % Allow for buffer zone at top of figure (1.1*max)
+title('Red subpopulation classes')
 
 % FIGURE 7 RIGHT PANEL
 % Average green and yellow cycling populations
-figure
+subplot(1,3,3)
 hold on 
 plot(tg,avgyel,'-','Color',[1 0.8 0],'LineWidth',2);
 plot(tg,avggre,'g-','LineWidth',2);
 xlabel('Time (hrs)')
 ylabel('Population')
 axis([0 T 0 max(avggre)*1.1]) % Allow for buffer zone at top of figure (1.1*max)
+title('Green and yellow subpopulations')
 
 %-% Radius comparison plot
 % Import experimental data and prepare for use
@@ -597,7 +720,7 @@ necros = [];
 for i = 1:length(Days)
     dy = Days(i);
     
-    filepath = ['RadiusData\day' num2str(dy) '.csv'];
+    filepath = ['RadiusData/day' num2str(dy) '.csv'];
     Tab = readtable(filepath);
     time = Tab.Day;
     time = 24*(time - 4); % Account for offset in experimental image labels (formation time). Time is in days here.
@@ -611,7 +734,7 @@ for i = 1:length(Days)
 end
 
 % Read IncuCyte data
-incu = readtable('RadiusData\IncucyteData.csv');
+incu = readtable('RadiusData/IncucyteData.csv');
 
 % Extract the data for the 793b cell line with 10 000 cell initial density
 C793b10k = incu{strcmp(incu{:, 'CellLine'}, '793b') & incu{:, 'InitialCondition'} == 10000, [4,11]};
@@ -667,3 +790,4 @@ ylabel('Radius')
 ax = gca;
 ax.XTick = 0:24:T;
 ax.XTickLabels = {"0","1","2","3","4","5","6","7","8","9","10"};
+title('Radius comparison')

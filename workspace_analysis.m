@@ -10,8 +10,8 @@ T = 240;
 L = 4000;
 I = 101;
 xmesh = linspace(0,L,I);
-ymesh = linspace(0,W,I);
-zmesh = linspace(0,H,I);
+ymesh = linspace(0,L,I);
+zmesh = linspace(0,L,I);
 
 sigp = 12; sigm = 0;
 sigs = [ sigp sigm ];
@@ -330,7 +330,6 @@ for q = 1:Ndays+1
     radial_day_yel = zeros(100,runcount);
     radial_day_arr = zeros(100,runcount);
     radial_day_gre = zeros(100,runcount);
-    radial_day_dead = zeros(100,runcount);
     radial_day_cyc = zeros(100,runcount);
     
        
@@ -345,7 +344,6 @@ for q = 1:Ndays+1
         dayq_runi_reds = [];
         dayq_runi_yels = [];
         dayq_runi_gres = [];
-        dayq_runi_deads = [];
         
         for j = 1:dayqN(i)
             if dayqstate(j,i) == 1
@@ -354,27 +352,23 @@ for q = 1:Ndays+1
                 dayq_runi_yels = [ dayq_runi_yels ; dayqX(j,i) dayqY(j,i) dayqZ(j,i) ];
             elseif dayqstate(j,i) == 3
                 dayq_runi_gres = [ dayq_runi_gres ; dayqX(j,i) dayqY(j,i) dayqZ(j,i) ];
-            elseif dayqstate(j,i) == 0
-                dayq_runi_deads = [ dayq_runi_deads ; dayqX(j,i) dayqY(j,i) dayqZ(j,i) ];
             end
         end
         
         % Calculate the distribution 
         dayqruniNarr = find(arrsnapall(:,((i-1)*3*(Ndays+1))+q),1,'last');
         dayqruniradarr = radarrall(TgDN*(q-1)+1,i);
-        [redc,yelc,grec,arrc,deadc,cycc] = radcalcs(dayq_runi_reds,dayq_runi_yels,dayq_runi_gres,arrsnapall(1:dayqruniNarr,((i-1)*3*(Ndays+1))+[q q+Ndays+1 q+2*(Ndays+1)]),dayq_runi_deads,pbin,dayqruniradarr);
+        [redc,yelc,grec,arrc,cycc] = radcalcs(dayq_runi_reds,dayq_runi_yels,dayq_runi_gres,arrsnapall(1:dayqruniNarr,((i-1)*3*(Ndays+1))+[q q+Ndays+1 q+2*(Ndays+1)]),pbin,dayqruniradarr);
         dayqrunired_distr = redc;
         dayqruniyel_distr = yelc;
         dayqrunigre_distr = grec;
         dayqruniarr_distr = arrc;
-        dayqrunidead_distr = deadc;
         dayqrunicyc_distr = cycc;
         
         radial_day_red(1:length(dayqrunired_distr),i) = dayqrunired_distr;
         radial_day_yel(1:length(dayqruniyel_distr),i) = dayqruniyel_distr;
         radial_day_gre(1:length(dayqrunigre_distr),i) = dayqrunigre_distr;
         radial_day_arr(1:length(dayqruniarr_distr),i) = dayqruniarr_distr;
-        radial_day_dead(1:length(dayqrunidead_distr),i) = dayqrunidead_distr;
         radial_day_cyc(1:length(dayqrunicyc_distr),i) = dayqrunicyc_distr;
     end
     
