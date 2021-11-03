@@ -246,7 +246,7 @@ for q = 1:N0
             Ng = Ng + 1;
         end
     else % Tuned to get an initial arrest radius matching 
-        if c_p(q) > c_a - 0.137 %Rr(c) < 0.01*Rr -- consider this as an initial arrest region
+        if c_p(q) > c_a - 0.137 %Rr(c) < 0.01*Rr -- consider this as an initial arrest region. Testing shows this qualitatively matches the arrest regions in the spheroids with variable size.
             u = rand;
             if u < 0.16 % reduced chance of greens and yellows in arrest zone. Arrest calculated when green radial density drops below 20%
                 u2 = rand;
@@ -295,7 +295,7 @@ arrsnaptempX = []; arrsnaptempY = []; arrsnaptempZ = [];
 centroid_i = [mean(X(1:N+Nd)) mean(Y(1:N+Nd)) mean(Z(1:N+Nd))];
 radq = 0; % Initialise estimate for arrest radius at t = 0
 for q = 1:N+Nd
-    if state(q) == 1 && c_p(q) < c_a - 0.137 % When Rr(c) < 0.01Rr
+    if state(q) == 1 && c_p(q) < c_a - 0.137 % When Rr(c) < 0.01Rr. Testing shows this qualitatively matches the arrest regions in the spheroids with variable size.
         arrsnaptempX = [arrsnaptempX ; X(q)];
         arrsnaptempY = [arrsnaptempY ; Y(q)];
         arrsnaptempZ = [arrsnaptempZ ; Z(q)];
