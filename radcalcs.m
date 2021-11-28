@@ -25,7 +25,7 @@ cycs = reds(cycidxs,:); % List of cycling red cells
 % Calculate the location of the centroid
 centroid = [mean([reds(:,1) ; yels(:,1) ; gres(:,1)]) mean([reds(:,2) ; yels(:,2) ; gres(:,2)]) mean([reds(:,3) ; yels(:,3) ; gres(:,3)])];
 
-% Calculate the radial coordinate of each agent
+% Calculate the radial coordinate of each agent -- Equation (S14)
 redrad = sqrt((reds(:,1) - centroid(1)).^2 + (reds(:,2) - centroid(2)).^2 + (reds(:,3) - centroid(3)).^2);
 yelrad = sqrt((yels(:,1) - centroid(1)).^2 + (yels(:,2) - centroid(2)).^2 + (yels(:,3) - centroid(3)).^2);
 grerad = sqrt((gres(:,1) - centroid(1)).^2 + (gres(:,2) - centroid(2)).^2 + (gres(:,3) - centroid(3)).^2);
@@ -38,8 +38,9 @@ cycrad = sqrt((cycs(:,1) - centroid(1)).^2 + (cycs(:,2) - centroid(2)).^2 + (cyc
 
 % Fill in the histogram with bin edges "pbin" with agent counts. Flip pbin
 % so that it corresponds as a distance from the centroid (radial
-% coordinate), as calculated in lines 19-27 
-[redcount,edgred] = histcounts(redrad,fliplr(pbin));
+% coordinate), as calculated in lines 19-27 -- This ostensibly calculates
+% Equation (S15)
+[redcount,edgred] = histcounts(redrad,fliplr(pbin)); 
 [yelcount,edgyel] = histcounts(yelrad,fliplr(pbin));
 [grecount,edggre] = histcounts(grerad,fliplr(pbin));
 if ~isempty(arrs)

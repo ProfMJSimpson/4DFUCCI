@@ -275,7 +275,7 @@ for i = 1:Ndays+1
     save(filename,'c_temp')
 end
 
-%% Prepare for density profile calculations
+%% Prepare for density profile calculations (Supplementary Material S9)
 
 % Please note: this process is relatively computationally expensive
 
@@ -312,7 +312,7 @@ for q = 1:Ndays+1
     % Bin EDGES for distance to the periphery (edges are passed into
     % histcounts). Upper bound rounded down to nearest 10 microns to avoid
     % collecting less dense region.
-    pbin = 10*floor(rmax(q)/10) - (0:rbw:10*floor(rmax(q)/10));   
+    pbin = 10*floor(rmax(q)/10) - (0:rbw:10*floor(rmax(q)/10)); % Equation (S13)
     % Set storage for agent data at day q
     dayqX = zeros(Nmax,runcount);
     dayqY = zeros(Nmax,runcount);
@@ -379,7 +379,7 @@ for q = 1:Ndays+1
     radial_data_arr(:,q) = mean(radial_day_arr,2);
     radial_data_cyc(:,q) = mean(radial_day_cyc,2);
     
-    % Scaled by occupied volume
+    % Scaled by occupied volume -- Equation (S16)
     rho_r(1:length(pbin)-1,q) = (radial_data_red(1:length(pbin)-1,q))./(4.*pi.*flip(pbin(1:end-1))'.^2*(rbw));
     rho_y(1:length(pbin)-1,q) = (radial_data_yel(1:length(pbin)-1,q))./(4.*pi.*flip(pbin(1:end-1))'.^2*(rbw));
     rho_g(1:length(pbin)-1,q) = (radial_data_gre(1:length(pbin)-1,q))./(4.*pi.*flip(pbin(1:end-1))'.^2*(rbw));

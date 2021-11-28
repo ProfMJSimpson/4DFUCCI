@@ -166,7 +166,7 @@ for i = 1:I^2
     
 end
 
-% Construct coefficient matrix as according to Equation (9)
+% Construct coefficient matrix as according to Equation (S7)
 for j = 1:length(adj)
     iter = iter + 1;
     ind = I^2 + j; % Offset index to avoid first z-layer
@@ -202,6 +202,7 @@ e7 = [ zeros(2*I^2,1) ; adj ];
 % Construct the coefficient matrix
 As = spdiags([e1 e2 e3 e4 e5 e6 e7],[-I^2 -I -1:1 I I^2],Nn,Nn);
 
+% GMRES solution to Equation (S8)
 c_old = ones(Nn,1);
 [c_v,flag] = gmres(As,rhs,[],1e-8,300,[],[],c_old); % Heightened restrictions to initialise better. Call flag to prevent printing of GMRES status
 c_old = c_v;
@@ -222,7 +223,7 @@ cycr = zeros(Nmax,1);
 Nr = 0; Nyel = 0; Ng = 0; % Initialise counts of cells of each type
 
 % Find proportion of red/yellow/green in freely cycling conditions
-full_cycle = 1/Rr + 1/Ry + 1/Rg; % Time of cell cycle
+full_cycle = 1/Rr + 1/Ry + 1/Rg; % Time of cell cycle -- Equation (S10)
 redprop = 1/Rr / full_cycle; % Proportion of time spent in red
 yelprop = 1/Ry / full_cycle; % Proportion of time spent in red
 greprop = 1/Rg / full_cycle; % Proportion of time spent in red
@@ -230,6 +231,7 @@ greprop = 1/Rg / full_cycle; % Proportion of time spent in red
 % Initialise storage for indicators of cell cycle or death status
 state = zeros(Nmax,1);
 
+% Follow Supplementary Material S7
 for q = 1:N0
     c_p(q) = interp3d(h,X(q),Y(q),Z(q),c);
     
@@ -399,7 +401,7 @@ while t < T && N+Nd < Nmax
     end
     
     % Update nutrient PDE and nutrient at cell locations
-    [c_v,flag] = gmres(As,rhs,[],1e-6,200,[],[],c_old);
+    [c_v,flag] = gmres(As,rhs,[],1e-6,200,[],[],c_old); % GMRES solution to Equation (S8)
     
     c_old = c_v; % Copy the vectorised nutrient concentration across to use as guess for next solution
     c = reshape(c_v,[I,I,I]); % Reshape into I*I*I profile (3D)
@@ -438,7 +440,7 @@ while t < T && N+Nd < Nmax
     Nr = Ncs(1); Nyel = Ncs(2); Ng = Ncs(3); N = Ncs(4); Nd = Ncs(5); rng_s = Ncs(6);
     
     % Update coefficient matrix -- only the main diagonal will change
-    % (changes to agent density) according to Equation (9)
+    % (changes to agent density) according to Equation (S7)
     initer = 0;
     for j = 1:length(adj)
         initer = initer + 1;
@@ -636,7 +638,7 @@ thresh = 0.2; % Threshold at which a region is considered arrested
 grerads = [];
 for q = 1:N+Nd
     if state(q) == 3
-        rad = sqrt((X(q)-centroid(1)).^2 + (Y(q)-centroid(2)).^2 + (Z(q)-centroid(3)).^2);
+        rad = sqrt((X(q)-centroid(1)).^2 + (Y(q)-centroid(2)).^2 + (Z(q)-centroid(3)).^2); % Equation (S1)
         grerads = [grerads ; rad];
     end
 end
@@ -650,8 +652,8 @@ for i = 1:length(bins)-1
     centres(i) = (bins(i+1)+bins(i))/2;
 end
 
-dens1 = data./(4.*pi.*centres'.^2*(rbw)); % This approximates the radial shell volume extremely well
-scaled_dens = dens1' ./ max(dens1);
+dens1 = data./(4.*pi.*centres'.^2*(rbw)); % Quick approximation to Equation (S2). Equivalent to within working precision.
+scaled_dens = dens1' ./ max(dens1); % Equation (S3)
 
 % Remove the outer tail of the cell concentration distribution, as this
 % leads to a better fit of the important data at the boundary of the
@@ -667,7 +669,7 @@ scaled_dens = scaled_dens(3:index);
 Dmax = (fullcent(2) - fullcent(1))/2 + fullcent(end);
 
 % Function to fit
-fun = @(r,gamma) gamma(1) * exp(-exp(gamma(2) * (gamma(3) - r)));
+fun = @(r,gamma) gamma(1) * exp(-exp(gamma(2) * (gamma(3) - r))); % Equation (S4)
 
 % Residual  function
 res = @(gamma) sum((scaled_dens - fun(centres,gamma)).^2);

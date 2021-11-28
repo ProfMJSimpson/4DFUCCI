@@ -158,7 +158,7 @@ end
 for q = 1:Ndays+1
     % Bin EDGES for distance to the periphery (edges are passed into
     % histcounts).
-    pbin = 10*floor(rmax(q)/10) - (0:rbw:10*floor(rmax(q)/10)); 
+    pbin = 10*floor(rmax(q)/10) - (0:rbw:10*floor(rmax(q)/10)); % Equation (S13)
     
     % Error bounds
     boundred1 = radial_data_red(1:length(pbin)-1,q) + radial_sd_red(1:length(pbin)-1,q);
@@ -180,7 +180,7 @@ for q = 1:Ndays+1
     
     % Scale error bounds by radial volume and scaling factor
     % Shift pbin to account for difference between bin counts (one fewer
-    % than bin edges)
+    % than bin edges) -- Equation (S16) and (S17)
     scaledred1 = boundred1./(4.*pi.*flip(pbin(1:end-1))'.^2*(rbw)*rho_max);
     scaledred2 = boundred2./(4.*pi.*flip(pbin(1:end-1))'.^2*(rbw)*rho_max);
     scaledyel1 = boundyel1./(4.*pi.*flip(pbin(1:end-1))'.^2*(rbw)*rho_max);

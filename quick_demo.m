@@ -223,7 +223,7 @@ for q = 1:Ndays+1
     % Bin EDGES for distance to the periphery (edges are passed into
     % histcounts). Upper bound rounded down to nearest 10 microns to avoid
     % collecting less dense region.
-    pbin = 10*floor(rmax(q)/10) - (0:rbw:10*floor(rmax(q)/10));   
+    pbin = 10*floor(rmax(q)/10) - (0:rbw:10*floor(rmax(q)/10)); % Equation (S13)
     % Set storage for agent data at day q
     dayqX = zeros(Nmax,runcount);
     dayqY = zeros(Nmax,runcount);
@@ -289,7 +289,7 @@ for q = 1:Ndays+1
     radial_data_arr(:,q) = mean(radial_day_arr,2);
     radial_data_cyc(:,q) = mean(radial_day_cyc,2);
     
-    % Scaled by occupied volume
+    % Scaled by occupied volume -- Equation (S16)
     rho_r(1:length(pbin)-1,q) = (radial_data_red(1:length(pbin)-1,q))./(4.*pi.*flip(pbin(1:end-1))'.^2*(rbw));
     rho_y(1:length(pbin)-1,q) = (radial_data_yel(1:length(pbin)-1,q))./(4.*pi.*flip(pbin(1:end-1))'.^2*(rbw));
     rho_g(1:length(pbin)-1,q) = (radial_data_gre(1:length(pbin)-1,q))./(4.*pi.*flip(pbin(1:end-1))'.^2*(rbw));
@@ -576,7 +576,7 @@ end
 for q = 1:Ndays+1
     % Bin EDGES for distance to the periphery (edges are passed into
     % histcounts). Minus one in first term to
-    pbin = 10*floor(rmax(q)/10) - (0:rbw:10*floor(rmax(q)/10)); 
+    pbin = 10*floor(rmax(q)/10) - (0:rbw:10*floor(rmax(q)/10)); % Equation (S13)
     
     % Scaling for the normalisation
     rho_max = max(rho_cyc,[],'all');
@@ -591,7 +591,7 @@ for q = 1:Ndays+1
     subplot(3,Ndays+1,2*(Ndays+1)+q)
     hold on
     % Shift pbin to account for difference between bin counts (one fewer
-    % than bin edges)
+    % than bin edges) -- Scaling with Equation (S17)
     hd1 = plot(pbin(2:end),(rho_cyc(1:length(pbin)-1,q))./(rho_max),'r-','LineWidth',2);
     hd2 = plot(pbin(2:end),(rho_y(1:length(pbin)-1,q))./(rho_max),'-','LineWidth',2,'Color',[1 0.8 0]);
     hd3 = plot(pbin(2:end),(rho_g(1:length(pbin)-1,q))./(rho_max),'g-','LineWidth',2);
